@@ -1,0 +1,103 @@
+@model BirthTrendsViewModel
+@{
+    ViewData["Title"] = "Birth Trends";
+    ViewData["Subtitle"] = "Annual trends, growth, and multi-country comparison";
+}
+
+<form method="get" class="filter-bar">
+    <div class="form-group" style="min-width:240px;">
+        <label class="field-label">Countries (select one or more)</label>
+        <select name="countryIds" multiple class="form-control" style="min-height:80px;">
+            @foreach (var c in Model.Countries)
+            {
+                <option value="@c.Id" selected="@Model.SelectedCountryIds.Contains(c.Id)">@c.CountryName</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="field-label">City</label>
+        @Html.DropDownList("cityId", new SelectList(Model.Cities, "Id", "CityName", Model.CityId), "All Cities", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year From</label>
+        <input type="number" name="yearFrom" value="@Model.YearFrom" class="form-control" style="width:110px;" />
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year To</label>
+        <input type="number" name="yearTo" value="@Model.YearTo" class="form-control" style="width:110px;" />
+    </div>
+    <button class="btn btn-primary" type="submit">Apply Filters</button>
+</form>
+
+@if (Model.GrowthRatePercent.HasValue)
+{
+    <div class="alert @(Model.GrowthRatePercent >= 0 ? "alert-success" : "alert-danger")">
+        Overall change across the selected range: <strong>@Model.GrowthRatePercent%</strong>
+        (@(Model.GrowthRatePercent >= 0 ? "growth" : "decline"))
+    </div>
+}
+
+<div class="grid-2" style="margin-bottom:18px;">
+    <div class="card">
+        <div class="card-header"><h3>Total Births Over Time (Line)</h3></div>
+        <div class="card-pad"><canvas id="lineChart" height="110"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Male vs Female (Bar)</h3></div>
+        <div class="card-pad"><canvas id="barChart" height="110"></canvas></div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><h3>Long-Term Trend (Area)</h3></div>
+        <div class="card-pad"><canvas id="areaChart" height="110"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Multi-Country Comparison</h3></div>
+        <div class="card-pad"><canvas id="compareChart" height="110"></canvas></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const years = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Years));
+const totals = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalBirths));
+const maleArr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MaleBirths));
+const femaleArr = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.FemaleBirths));
+const countrySeries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CountrySeries));
+
+const male = '#3e6990', female = '#c96a86', historical = '#4c5d73';
+const palette = ['#4c5d73', '#3e6990', '#c96a86', '#b9812e', '#2f7d5a', '#8a5fb0'];
+
+new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: { labels: years, datasets: [{ label: 'Total Births', data: totals, borderColor: historical, tension: .3 }] },
+  options: { plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: { labels: years, datasets: [
+    { label: 'Male', data: maleArr, backgroundColor: male },
+    { label: 'Female', data: femaleArr, backgroundColor: female }
+  ]},
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('areaChart'), {
+  type: 'line',
+  data: { labels: years, datasets: [{ label: 'Total Births', data: totals, borderColor: historical, backgroundColor: 'rgba(76,93,115,0.15)', fill: true, tension: .3 }] },
+  options: { plugins: { legend: { display: false } } }
+});
+
+const compareDatasets = Object.keys(countrySeries).map((name, i) => ({
+  label: name, data: countrySeries[name], borderColor: palette[i % palette.length], tension: .3
+}));
+new Chart(document.getElementById('compareChart'), {
+  type: 'line',
+  data: { labels: years, datasets: compareDatasets },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+}

@@ -1,0 +1,50 @@
+@model List<Country>
+@{
+    ViewData["Title"] = "Countries";
+    ViewData["Subtitle"] = "Manage the countries tracked by the system";
+}
+
+<div class="filter-bar">
+    <form method="get" style="display:flex; gap:12px; align-items:end; flex:1;">
+        <div class="form-group">
+            <label class="field-label">Search</label>
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Country, code, or continent" style="min-width:260px;" />
+        </div>
+        <button class="btn btn-outline" type="submit">Search</button>
+    </form>
+    <a asp-action="Create" class="btn btn-primary">+ Add Country</a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Country</th><th>Code</th><th>Continent</th><th>Added</th><th></th></tr>
+            </thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="5"><div class="empty-state"><h4>No countries found</h4><p>Try a different search or add a new country.</p></div></td></tr>
+            }
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td><strong>@c.CountryName</strong></td>
+                    <td><span class="badge badge-historical">@c.CountryCode</span></td>
+                    <td>@c.Continent</td>
+                    <td class="text-soft">@c.CreatedAt.ToString("MMM d, yyyy")</td>
+                    <td>
+                        <div class="actions-row">
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-outline btn-sm">Edit</a>
+                            <form asp-action="Delete" asp-route-id="@c.Id" method="post" data-confirm="Delete @c.CountryName? This cannot be undone.">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

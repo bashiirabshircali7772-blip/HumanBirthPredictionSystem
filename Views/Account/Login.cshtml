@@ -1,0 +1,48 @@
+@model LoginViewModel
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Login";
+}
+
+<div class="login-page">
+    <div class="login-visual">
+        <div>
+            <div class="eyebrow">Predictive Demography Platform</div>
+            <h1>Human Birth Trends and Gender Distribution</h1>
+            <p class="lead">Analyze birth trends and predict future population birth patterns across countries using historical records and machine learning.</p>
+        </div>
+        <div class="login-stats">
+            <div><div class="n">2025&ndash;35</div><div class="l">Prediction Window</div></div>
+            <div><div class="n">12+</div><div class="l">Countries Tracked</div></div>
+            <div><div class="n">ML</div><div class="l">Linear Regression Model</div></div>
+        </div>
+    </div>
+
+    <div class="login-form-panel">
+        <div class="login-card">
+            <div class="mark"></div>
+            <h2>Welcome back</h2>
+            <p class="sub">Sign in to access the analysis dashboard.</p>
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+
+            <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label class="field-label" asp-for="Username">Username</label>
+                    <input asp-for="Username" class="form-control" placeholder="Enter your username" autocomplete="username" autofocus />
+                    <span asp-validation-for="Username" class="field-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="field-label" asp-for="Password">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="field-error"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,173 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Subtitle"] = "Live summary drawn directly from SQL Server";
+}
+
+<div class="stat-grid">
+    <div class="stat-card accent-historical">
+        <div class="label">Total Countries</div>
+        <div class="value">@Model.TotalCountries</div>
+    </div>
+    <div class="stat-card accent-historical">
+        <div class="label">Total Cities</div>
+        <div class="value">@Model.TotalCities</div>
+    </div>
+    <div class="stat-card accent-historical">
+        <div class="label">Total Birth Records</div>
+        <div class="value">@Model.TotalBirthRecords</div>
+    </div>
+    <div class="stat-card accent-predicted">
+        <div class="label">Latest Predicted Births</div>
+        <div class="value">@Model.LatestPredictedBirths.ToString("N0")</div>
+    </div>
+
+    <div class="stat-card accent-historical">
+        <div class="label">Latest Total Births</div>
+        <div class="value">@Model.LatestTotalBirths.ToString("N0")</div>
+    </div>
+    <div class="stat-card accent-male">
+        <div class="label">Total Male Births</div>
+        <div class="value">@Model.TotalMaleBirths.ToString("N0")</div>
+        <div class="delta">@Model.MalePercentage% of recorded births</div>
+    </div>
+    <div class="stat-card accent-female">
+        <div class="label">Total Female Births</div>
+        <div class="value">@Model.TotalFemaleBirths.ToString("N0")</div>
+        <div class="delta">@Model.FemalePercentage% of recorded births</div>
+    </div>
+    <div class="stat-card accent-female">
+        <div class="label">Gender Split</div>
+        <div class="value" style="font-size:20px;">@Model.MalePercentage% &middot; @Model.FemalePercentage%</div>
+        <div class="delta">Male &middot; Female</div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:18px;">
+    <div class="card">
+        <div class="card-header"><h3>Birth Trends Over Time</h3></div>
+        <div class="card-pad"><canvas id="trendChart" height="110"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Gender Distribution</h3></div>
+        <div class="card-pad"><canvas id="genderPie" height="110"></canvas></div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:18px;">
+    <div class="card">
+        <div class="card-header"><h3>Male vs Female Births</h3></div>
+        <div class="card-pad"><canvas id="mfBar" height="110"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Country Comparison (Latest Year)</h3></div>
+        <div class="card-pad"><canvas id="countryBar" height="110"></canvas></div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header"><h3>Historical vs Predicted Births</h3></div>
+    <div class="card-pad"><canvas id="histPredChart" height="90"></canvas></div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><h3>Recent Birth Records</h3></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Country</th><th>Year</th><th class="num">Total Births</th><th>Type</th></tr></thead>
+                <tbody>
+                @if (Model.RecentRecords.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-soft">No birth records yet.</td></tr>
+                }
+                @foreach (var r in Model.RecentRecords)
+                {
+                    <tr>
+                        <td>@r.Country</td>
+                        <td>@r.Year</td>
+                        <td class="num">@r.TotalBirths.ToString("N0")</td>
+                        <td><span class="badge badge-@r.RecordType.ToLower()">@r.RecordType</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3>Latest Predictions</h3></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Country</th><th>Year</th><th class="num">Predicted Total</th><th>Model</th></tr></thead>
+                <tbody>
+                @if (Model.RecentPredictions.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-soft">No predictions generated yet. Visit the Prediction page.</td></tr>
+                }
+                @foreach (var p in Model.RecentPredictions)
+                {
+                    <tr>
+                        <td>@p.Country @(p.City != null ? $"({p.City})" : "")</td>
+                        <td>@p.Year</td>
+                        <td class="num">@p.PredictedTotalBirths.ToString("N0")</td>
+                        <td><span class="badge badge-predicted">@p.PredictionModel</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const trendYears = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendYears));
+const trendTotals = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendTotals));
+const trendMale = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendMale));
+const trendFemale = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendFemale));
+const countryNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CountryNames));
+const countryTotals = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CountryTotals));
+const hvpYears = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HistoricalVsPredicted.Select(x => x.Year)));
+const hvpHist = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HistoricalVsPredicted.Select(x => x.HistoricalTotal)));
+const hvpPred = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HistoricalVsPredicted.Select(x => x.PredictedTotal)));
+
+const male = '#3e6990', female = '#c96a86', predicted = '#b9812e', historical = '#4c5d73';
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: { labels: trendYears, datasets: [{ label: 'Total Births', data: trendTotals, borderColor: historical, backgroundColor: 'rgba(76,93,115,0.08)', fill: true, tension: 0.35 }] },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } }
+});
+
+new Chart(document.getElementById('genderPie'), {
+  type: 'doughnut',
+  data: { labels: ['Male', 'Female'], datasets: [{ data: [@Model.TotalMaleBirths, @Model.TotalFemaleBirths], backgroundColor: [male, female] }] },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('mfBar'), {
+  type: 'bar',
+  data: { labels: trendYears, datasets: [
+    { label: 'Male', data: trendMale, backgroundColor: male },
+    { label: 'Female', data: trendFemale, backgroundColor: female }
+  ] },
+  options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: false } } }
+});
+
+new Chart(document.getElementById('countryBar'), {
+  type: 'bar',
+  data: { labels: countryNames, datasets: [{ label: 'Total Births', data: countryTotals, backgroundColor: historical }] },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('histPredChart'), {
+  type: 'line',
+  data: { labels: hvpYears, datasets: [
+    { label: 'Historical', data: hvpHist, borderColor: historical, backgroundColor: historical, spanGaps: true },
+    { label: 'Predicted', data: hvpPred, borderColor: predicted, backgroundColor: predicted, borderDash: [6,4], spanGaps: true }
+  ] },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+}

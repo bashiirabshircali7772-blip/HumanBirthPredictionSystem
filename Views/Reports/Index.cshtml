@@ -1,0 +1,113 @@
+@model ReportsViewModel
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["Subtitle"] = "Thesis-ready statistical summaries and exportable tables";
+    var reportLabels = new Dictionary<string,string> {
+        {"BirthTrends","Birth Trends Report"},
+        {"GenderDistribution","Gender Distribution Report"},
+        {"CountryComparison","Country Comparison Report"},
+        {"CityLevel","City-Level Report"},
+        {"HistoricalData","Historical Birth Data Report"},
+        {"PredictionResults","Prediction Results Report"},
+        {"HistoricalVsPredicted","Historical vs Predicted Report"}
+    };
+}
+
+<form method="get" class="filter-bar">
+    <div class="form-group" style="min-width:240px;">
+        <label class="field-label">Report Type</label>
+        <select name="reportType" class="form-control">
+            @foreach (var kv in reportLabels)
+            {
+                <option value="@kv.Key" selected="@(Model.ReportType == kv.Key)">@kv.Value</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="field-label">Country</label>
+        @Html.DropDownList("countryId", new SelectList(Model.Countries, "Id", "CountryName", Model.CountryId), "All Countries", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year From</label>
+        <input type="number" name="yearFrom" value="@Model.YearFrom" class="form-control" style="width:110px;" />
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year To</label>
+        <input type="number" name="yearTo" value="@Model.YearTo" class="form-control" style="width:110px;" />
+    </div>
+    <button class="btn btn-primary" type="submit">Generate Report</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">Print / Export PDF</button>
+</form>
+
+<h2 style="margin-bottom:4px;">@reportLabels[Model.ReportType]</h2>
+<p class="text-soft" style="margin-bottom:20px;">Generated @DateTime.Now.ToString("MMMM d, yyyy 'at' h:mm tt")</p>
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:24px;">
+    <div class="stat-card accent-historical">
+        <div class="label">Total Births (Historical)</div>
+        <div class="value">@Model.TotalBirthsSum.ToString("N0")</div>
+    </div>
+    <div class="stat-card accent-male">
+        <div class="label">Total Male Births</div>
+        <div class="value">@Model.TotalMaleSum.ToString("N0")</div>
+    </div>
+    <div class="stat-card accent-female">
+        <div class="label">Total Female Births</div>
+        <div class="value">@Model.TotalFemaleSum.ToString("N0")</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header"><h3>Historical / Recorded Data</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Country</th><th>City</th><th>Year</th><th class="num">Total</th><th class="num">Male</th><th class="num">Female</th><th>Type</th><th>Source</th></tr></thead>
+            <tbody>
+            @if (!Model.HistoricalRows.Any())
+            {
+                <tr><td colspan="8" class="text-soft">No historical records match the selected filters.</td></tr>
+            }
+            @foreach (var r in Model.HistoricalRows)
+            {
+                <tr>
+                    <td>@r.Country?.CountryName</td>
+                    <td class="text-soft">@(r.City?.CityName ?? "&mdash;")</td>
+                    <td>@r.Year</td>
+                    <td class="num">@r.TotalBirths.ToString("N0")</td>
+                    <td class="num">@r.MaleBirths.ToString("N0")</td>
+                    <td class="num">@r.FemaleBirths.ToString("N0")</td>
+                    <td><span class="badge badge-@r.RecordType.ToString().ToLower()">@r.RecordType</span></td>
+                    <td class="text-soft">@r.DataSource</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Prediction Results</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Country</th><th>City</th><th>Year</th><th class="num">Predicted Total</th><th class="num">Predicted Male</th><th class="num">Predicted Female</th><th>Model</th></tr></thead>
+            <tbody>
+            @if (!Model.PredictionRows.Any())
+            {
+                <tr><td colspan="7" class="text-soft">No predictions match the selected filters. Run a prediction from the Prediction page first.</td></tr>
+            }
+            @foreach (var p in Model.PredictionRows)
+            {
+                <tr>
+                    <td>@p.Country?.CountryName</td>
+                    <td class="text-soft">@(p.City?.CityName ?? "&mdash;")</td>
+                    <td>@p.Year</td>
+                    <td class="num">@p.PredictedTotalBirths.ToString("N0")</td>
+                    <td class="num">@p.PredictedMaleBirths.ToString("N0")</td>
+                    <td class="num">@p.PredictedFemaleBirths.ToString("N0")</td>
+                    <td><span class="badge badge-predicted">@p.PredictionModel</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

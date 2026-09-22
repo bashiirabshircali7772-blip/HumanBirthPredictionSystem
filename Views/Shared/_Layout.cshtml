@@ -1,0 +1,115 @@
+@{
+    string current = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    bool IsActive(string name) => string.Equals(current, name, StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · Human Birth Prediction System</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="mark">HB</div>
+                <div class="title">Human Birth Prediction &amp; Gender Distribution System</div>
+                <div class="subtitle">Predictive Analysis · 2025&ndash;2035</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">Overview</div>
+                <a href="/Dashboard" class="@(IsActive("Dashboard") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+                    Dashboard
+                </a>
+
+                <div class="nav-label">Data Management</div>
+                <a href="/Countries" class="@(IsActive("Countries") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>
+                    Countries
+                </a>
+                <a href="/Cities" class="@(IsActive("Cities") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V9l6-4 6 4v12M15 21V13l6-3v11"/></svg>
+                    Cities
+                </a>
+                <a href="/BirthRecords" class="@(IsActive("BirthRecords") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                    Birth Records
+                </a>
+
+                <div class="nav-label">Analysis</div>
+                <a href="/GenderDistribution" class="@(IsActive("GenderDistribution") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18"/></svg>
+                    Gender Distribution
+                </a>
+                <a href="/BirthTrends" class="@(IsActive("BirthTrends") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-9M21 6v5h-5"/></svg>
+                    Birth Trends
+                </a>
+                <a href="/Prediction" class="@(IsActive("Prediction") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19l5-6 4 3 7-9"/><path d="M15 6h5v5"/></svg>
+                    Prediction
+                </a>
+                <a href="/Reports" class="@(IsActive("Reports") ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                    Reports
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-row">
+                    <div class="avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "A")</div>
+                    <div>
+                        <div style="color:#fff;font-weight:600;">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</div>
+                        <div>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Administrator")</div>
+                    </div>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="get">
+                    <button type="submit" class="btn btn-outline btn-sm" style="width:100%; color:#d9deec; border-color:rgba(255,255,255,0.2);">Logout</button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="content">
+            <div class="topbar">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                    </button>
+                    <div>
+                        <div class="page-title">@ViewData["Title"]</div>
+                        @if (ViewData["Subtitle"] != null)
+                        {
+                            <div class="page-sub">@ViewData["Subtitle"]</div>
+                        }
+                    </div>
+                </div>
+                <div class="topbar-meta">
+                    <span class="topbar-date">Thursday, 10 September 2026</span>
+                    <span class="topbar-profile">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</span>
+                </div>
+            </div>
+
+            <div class="page-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success" data-autodismiss>@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" data-autodismiss>@TempData["Error"]</div>
+                }
+
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

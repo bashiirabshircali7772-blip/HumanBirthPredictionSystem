@@ -1,0 +1,35 @@
+@model Country
+@{
+    ViewData["Title"] = "Add Country";
+}
+
+<div class="card card-pad" style="max-width:640px;">
+    <div asp-validation-summary="ModelOnly" class="validation-summary" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
+
+    <form asp-action="Create" method="post" novalidate>
+        @Html.AntiForgeryToken()
+        <div class="form-grid">
+            <div class="form-group full">
+                <label class="field-label" asp-for="CountryName">Country Name</label>
+                <input asp-for="CountryName" class="form-control" placeholder="e.g. Somalia" />
+                <span asp-validation-for="CountryName" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="field-label" asp-for="CountryCode">Country Code</label>
+                <input asp-for="CountryCode" class="form-control" placeholder="e.g. SOM" maxlength="10" />
+                <span asp-validation-for="CountryCode" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="field-label" asp-for="Continent">Continent</label>
+                <input asp-for="Continent" class="form-control" placeholder="e.g. Africa" />
+                <span asp-validation-for="Continent" class="field-error"></span>
+            </div>
+        </div>
+        <div class="actions-row" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary">Save Country</button>
+            <a asp-action="Index" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

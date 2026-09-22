@@ -1,0 +1,103 @@
+@model GenderDistributionViewModel
+@{
+    ViewData["Title"] = "Gender Distribution";
+    ViewData["Subtitle"] = "Male vs. female birth share, filterable by country, city and year";
+}
+
+<form method="get" class="filter-bar">
+    <div class="form-group">
+        <label class="field-label">Country</label>
+        @Html.DropDownList("countryId", new SelectList(Model.Countries, "Id", "CountryName", Model.CountryId), "All Countries", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label class="field-label">City</label>
+        @Html.DropDownList("cityId", new SelectList(Model.Cities, "Id", "CityName", Model.CityId), "All Cities", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year</label>
+        <input type="number" name="year" value="@Model.Year" class="form-control" style="width:110px;" placeholder="Any" />
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year From</label>
+        <input type="number" name="yearFrom" value="@Model.YearFrom" class="form-control" style="width:110px;" />
+    </div>
+    <div class="form-group">
+        <label class="field-label">Year To</label>
+        <input type="number" name="yearTo" value="@Model.YearTo" class="form-control" style="width:110px;" />
+    </div>
+    <button class="btn btn-primary" type="submit">Apply Filters</button>
+</form>
+
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card accent-male">
+        <div class="label">Total Male Births</div>
+        <div class="value">@Model.TotalMaleBirths.ToString("N0")</div>
+    </div>
+    <div class="stat-card accent-female">
+        <div class="label">Total Female Births</div>
+        <div class="value">@Model.TotalFemaleBirths.ToString("N0")</div>
+    </div>
+    <div class="stat-card accent-male">
+        <div class="label">Male Percentage</div>
+        <div class="value">@Model.MalePercentage%</div>
+    </div>
+    <div class="stat-card accent-female">
+        <div class="label">Female Percentage</div>
+        <div class="value">@Model.FemalePercentage%</div>
+    </div>
+</div>
+
+<div class="grid-3" style="margin-bottom:18px;">
+    <div class="card">
+        <div class="card-header"><h3>Pie Chart</h3></div>
+        <div class="card-pad"><canvas id="pieChart"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Doughnut Chart</h3></div>
+        <div class="card-pad"><canvas id="donutChart"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Bar Chart</h3></div>
+        <div class="card-pad"><canvas id="barChart"></canvas></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Country Comparison</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Country</th><th class="num">Male</th><th class="num">Female</th><th class="num">Male %</th><th class="num">Female %</th></tr></thead>
+            <tbody>
+            @if (!Model.CountryComparison.Any())
+            {
+                <tr><td colspan="5"><div class="empty-state"><h4>No data for the selected filters</h4></div></td></tr>
+            }
+            @foreach (var row in Model.CountryComparison)
+            {
+                <tr>
+                    <td><strong>@row.CountryName</strong></td>
+                    <td class="num">@row.MaleBirths.ToString("N0")</td>
+                    <td class="num">@row.FemaleBirths.ToString("N0")</td>
+                    <td class="num">@row.MalePercentage%</td>
+                    <td class="num">@row.FemalePercentage%</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const male = '#3e6990', female = '#c96a86';
+const genderData = { labels: ['Male', 'Female'], datasets: [{ data: [@Model.TotalMaleBirths, @Model.TotalFemaleBirths], backgroundColor: [male, female] }] };
+
+new Chart(document.getElementById('pieChart'), { type: 'pie', data: genderData, options: { plugins: { legend: { position: 'bottom' } } } });
+new Chart(document.getElementById('donutChart'), { type: 'doughnut', data: genderData, options: { plugins: { legend: { position: 'bottom' } } } });
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: { labels: ['Male', 'Female'], datasets: [{ data: [@Model.TotalMaleBirths, @Model.TotalFemaleBirths], backgroundColor: [male, female] }] },
+  options: { plugins: { legend: { display: false } } }
+});
+</script>
+}
