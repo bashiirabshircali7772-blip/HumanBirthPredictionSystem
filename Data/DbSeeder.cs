@@ -115,6 +115,22 @@ namespace HumanBirthPredictionSystem.Data
                 db.BirthRecords.AddRange(records);
                 db.SaveChanges();
             }
+
+            // Keep birth-record analysis focused on Somalia.
+            var somaliaId = db.Countries
+                .Where(c => c.CountryCode == "SOM")
+                .Select(c => c.Id)
+                .Single();
+
+            var nonSomaliaRecords = db.BirthRecords
+                .Where(r => r.CountryId != somaliaId)
+                .ToList();
+
+            if (nonSomaliaRecords.Count > 0)
+            {
+                db.BirthRecords.RemoveRange(nonSomaliaRecords);
+                db.SaveChanges();
+            }
         }
     }
 }
