@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+.git/
+.venv/
+__pycache__/
+*.user
+appsettings.Development.json

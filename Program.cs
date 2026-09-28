@@ -5,6 +5,16 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var configuredConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var railwayConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+var useSqlite = builder.Environment.IsProduction() && string.IsNullOrWhiteSpace(railwayConnectionString);
+
+if (useSqlite)
+{
+    Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "data"));
+    configuredConnectionString = "Data Source=data/humanbirth.db";
+}
+
 // ---------------------------------------------------------------------
 // MVC + Razor
 // ---------------------------------------------------------------------
@@ -14,7 +24,16 @@ builder.Services.AddControllersWithViews();
 // Database (SQL Server via Entity Framework Core)
 // ---------------------------------------------------------------------
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (useSqlite)
+    {
+        options.UseSqlite(configuredConnectionString);
+    }
+    else
+    {
+        options.UseSqlServer(configuredConnectionString);
+    }
+});
 
 // ---------------------------------------------------------------------
 // Cookie Authentication
@@ -48,7 +67,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    if (useSqlite)
+    {
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        db.Database.Migrate();
+    }
     DbSeeder.Seed(db);
 }
 
@@ -61,7 +87,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();
