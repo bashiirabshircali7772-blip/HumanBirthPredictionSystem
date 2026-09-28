@@ -31,7 +31,8 @@ namespace HumanBirthPredictionSystem.Controllers
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(r => r.Country!.CountryName.Contains(search) || r.DataSource.Contains(search));
 
-            ViewBag.Countries = new SelectList(await _db.Countries.OrderBy(c => c.CountryName).ToListAsync(), "Id", "CountryName", countryId);
+            var somalia = await GetSomaliaAsync();
+            ViewBag.Countries = new SelectList(new[] { somalia }, "Id", "CountryName", countryId);
             ViewBag.CountryId = countryId;
             ViewBag.CityId = cityId;
             ViewBag.Year = year;
@@ -44,7 +45,9 @@ namespace HumanBirthPredictionSystem.Controllers
 
         public async Task<IActionResult> Create()
         {
-            ViewBag.Countries = new SelectList(await _db.Countries.OrderBy(c => c.CountryName).ToListAsync(), "Id", "CountryName");
+            var somalia = await GetSomaliaAsync();
+            ViewBag.Countries = new SelectList(new[] { somalia }, "Id", "CountryName");
+            ViewBag.Cities = new SelectList(await _db.Cities.Where(c => c.CountryId == somalia.Id).OrderBy(c => c.CityName).ToListAsync(), "Id", "CityName");
             return View(new BirthRecord { RecordType = RecordType.Historical, Year = DateTime.UtcNow.Year });
         }
 
@@ -56,13 +59,22 @@ namespace HumanBirthPredictionSystem.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Countries = new SelectList(await _db.Countries.OrderBy(c => c.CountryName).ToListAsync(), "Id", "CountryName", model.CountryId);
+                await PopulateSomaliaListsAsync(model.CountryId, model.CityId);
                 return View(model);
             }
 
             model.CreatedAt = DateTime.UtcNow;
-            _db.BirthRecords.Add(model);
-            await _db.SaveChangesAsync();
+            try
+            {
+                _db.BirthRecords.Add(model);
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                ModelState.AddModelError(string.Empty, "The record could not be saved. Check that the year and record type are not duplicated.");
+                await PopulateSomaliaListsAsync(model.CountryId, model.CityId);
+                return View(model);
+            }
 
             TempData["Success"] = "Birth record was added successfully.";
             return RedirectToAction(nameof(Index));
@@ -73,8 +85,7 @@ namespace HumanBirthPredictionSystem.Controllers
             var record = await _db.BirthRecords.FindAsync(id);
             if (record == null) return NotFound();
 
-            ViewBag.Countries = new SelectList(await _db.Countries.OrderBy(c => c.CountryName).ToListAsync(), "Id", "CountryName", record.CountryId);
-            ViewBag.Cities = new SelectList(await _db.Cities.Where(c => c.CountryId == record.CountryId).OrderBy(c => c.CityName).ToListAsync(), "Id", "CityName", record.CityId);
+            await PopulateSomaliaListsAsync(record.CountryId, record.CityId);
             return View(record);
         }
 
@@ -88,7 +99,7 @@ namespace HumanBirthPredictionSystem.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Countries = new SelectList(await _db.Countries.OrderBy(c => c.CountryName).ToListAsync(), "Id", "CountryName", model.CountryId);
+                await PopulateSomaliaListsAsync(model.CountryId, model.CityId);
                 return View(model);
             }
 
@@ -105,7 +116,16 @@ namespace HumanBirthPredictionSystem.Controllers
             existing.SourceReference = model.SourceReference;
             existing.RecordType = model.RecordType;
 
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                ModelState.AddModelError(string.Empty, "The record could not be saved. Check that the year and record type are not duplicated.");
+                await PopulateSomaliaListsAsync(model.CountryId, model.CityId);
+                return View(model);
+            }
             TempData["Success"] = "Birth record was updated successfully.";
             return RedirectToAction(nameof(Index));
         }
@@ -132,6 +152,12 @@ namespace HumanBirthPredictionSystem.Controllers
         /// </summary>
         private async Task ValidateRecordAsync(BirthRecord model, int? excludingId = null)
         {
+            var somalia = await GetSomaliaAsync();
+            if (model.CountryId != somalia.Id)
+            {
+                ModelState.AddModelError(nameof(model.CountryId), "Birth records can only be added for Somalia.");
+            }
+
             if (model.MaleBirths + model.FemaleBirths != model.TotalBirths)
             {
                 ModelState.AddModelError(string.Empty,
@@ -159,6 +185,20 @@ namespace HumanBirthPredictionSystem.Controllers
                 ModelState.AddModelError(string.Empty,
                     "A record already exists for this country, city, year, and record type.");
             }
+        }
+
+        private Task<Country> GetSomaliaAsync()
+        {
+            return _db.Countries.SingleAsync(c => c.CountryCode == "SOM");
+        }
+
+        private async Task PopulateSomaliaListsAsync(int? countryId, int? cityId)
+        {
+            var somalia = await GetSomaliaAsync();
+            ViewBag.Countries = new SelectList(new[] { somalia }, "Id", "CountryName", countryId);
+            ViewBag.Cities = new SelectList(
+                await _db.Cities.Where(c => c.CountryId == somalia.Id).OrderBy(c => c.CityName).ToListAsync(),
+                "Id", "CityName", cityId);
         }
     }
 }
