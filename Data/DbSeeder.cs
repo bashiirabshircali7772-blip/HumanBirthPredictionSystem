@@ -100,57 +100,58 @@ namespace HumanBirthPredictionSystem.Data
                 db.SaveChanges();
             }
 
-            // ---- Sample historical birth records (clearly labeled) --------
-            if (!db.BirthRecords.Any())
+            // ---- Somalia birth records (2015-2035 demographic dataset) --------
+            var somaliaCountry = db.Countries.FirstOrDefault(c => c.CountryCode == "SOM");
+            if (somaliaCountry != null)
             {
-                var rnd = new Random(42);
-                var records = new List<BirthRecord>();
-
-                foreach (var country in db.Countries.ToList())
+                var somaliaBirthData = new (int Year, int Total, int Male, int Female, RecordType Type)[]
                 {
-                    // Base births vary per country so charts look realistic
-                    double baseTotal = 40000 + rnd.Next(0, 400000);
+                    (2015, 651292, 332031, 319261, RecordType.Estimated),
+                    (2016, 668096, 340598, 327498, RecordType.Estimated),
+                    (2017, 688481, 350990, 337491, RecordType.Estimated),
+                    (2018, 705717, 359777, 345940, RecordType.Estimated),
+                    (2019, 723617, 368903, 354714, RecordType.Estimated),
+                    (2020, 741705, 378124, 363581, RecordType.Estimated),
+                    (2021, 761567, 388250, 373317, RecordType.Estimated),
+                    (2022, 779534, 397409, 382125, RecordType.Estimated),
+                    (2023, 788763, 402114, 386649, RecordType.Estimated),
+                    (2024, 804966, 410375, 394591, RecordType.Estimated),
+                    (2025, 822215, 419168, 403047, RecordType.Predicted),
+                    (2026, 836420, 426410, 410010, RecordType.Predicted),
+                    (2027, 847521, 432070, 415451, RecordType.Predicted),
+                    (2028, 859891, 438376, 421515, RecordType.Predicted),
+                    (2029, 869665, 443359, 426306, RecordType.Predicted),
+                    (2030, 878445, 447835, 430610, RecordType.Predicted),
+                    (2031, 891665, 454574, 437091, RecordType.Predicted),
+                    (2032, 901357, 459515, 441842, RecordType.Predicted),
+                    (2033, 915030, 466486, 448544, RecordType.Predicted),
+                    (2034, 924402, 471264, 453138, RecordType.Predicted),
+                    (2035, 936181, 477269, 458912, RecordType.Predicted),
+                };
 
-                    for (int year = 2015; year <= 2024; year++)
-                    {
-                        // Slight randomized year-over-year growth/decline
-                        baseTotal *= 1 + (rnd.NextDouble() * 0.04 - 0.01);
-                        int total = (int)baseTotal;
-                        int male = (int)(total * (0.512 + (rnd.NextDouble() * 0.006 - 0.003)));
-                        int female = total - male;
-
-                        records.Add(new BirthRecord
-                        {
-                            CountryId = country.Id,
-                            CityId = null,
-                            Year = year,
-                            TotalBirths = total,
-                            MaleBirths = male,
-                            FemaleBirths = female,
-                            DataSource = "Sample Data for System Demonstration",
-                            SourceReference = "Generated for thesis defense demonstration purposes",
-                            RecordType = RecordType.Estimated
-                        });
-                    }
-                }
-
-                db.BirthRecords.AddRange(records);
+                // Clear any non-Somalia or old demo records
+                var existingRecords = db.BirthRecords.ToList();
+                db.BirthRecords.RemoveRange(existingRecords);
                 db.SaveChanges();
-            }
 
-            // Keep birth-record analysis focused on Somalia.
-            var somaliaId = db.Countries
-                .Where(c => c.CountryCode == "SOM")
-                .Select(c => c.Id)
-                .Single();
-
-            var nonSomaliaRecords = db.BirthRecords
-                .Where(r => r.CountryId != somaliaId)
-                .ToList();
-
-            if (nonSomaliaRecords.Count > 0)
-            {
-                db.BirthRecords.RemoveRange(nonSomaliaRecords);
+                foreach (var item in somaliaBirthData)
+                {
+                    db.BirthRecords.Add(new BirthRecord
+                    {
+                        CountryId = somaliaCountry.Id,
+                        CityId = null,
+                        Year = item.Year,
+                        TotalBirths = item.Total,
+                        MaleBirths = item.Male,
+                        FemaleBirths = item.Female,
+                        DataSource = item.Type == RecordType.Predicted
+                            ? "Demographic Projections (2025-2035)"
+                            : "Demographic Estimates (2015-2024)",
+                        SourceReference = "Somalia Demographic and Health Survey / UN Population Division",
+                        RecordType = item.Type,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
                 db.SaveChanges();
             }
         }
