@@ -29,10 +29,25 @@ namespace HumanBirthPredictionSystem.Controllers
             if (year.HasValue) query = query.Where(r => r.Year == year);
             if (recordType.HasValue) query = query.Where(r => r.RecordType == recordType);
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(r => r.Country!.CountryName.Contains(search) || r.DataSource.Contains(search));
+            {
+                var s = search.Trim();
+                query = query.Where(r => 
+                    (r.Country != null && r.Country.CountryName.Contains(s)) ||
+                    (r.City != null && r.City.CityName.Contains(s)) ||
+                    r.DataSource.Contains(s));
+            }
 
-            var somalia = await GetSomaliaAsync();
-            ViewBag.Countries = new SelectList(new[] { somalia }, "Id", "CountryName", countryId);
+            var allCountries = await _db.Countries.OrderBy(c => c.CountryName).ToListAsync();
+            ViewBag.Countries = new SelectList(allCountries, "Id", "CountryName", countryId);
+
+            var citiesQuery = _db.Cities.AsNoTracking();
+            if (countryId.HasValue)
+            {
+                citiesQuery = citiesQuery.Where(c => c.CountryId == countryId);
+            }
+            var allCities = await citiesQuery.OrderBy(c => c.CityName).ToListAsync();
+            ViewBag.Cities = new SelectList(allCities, "Id", "CityName", cityId);
+
             ViewBag.CountryId = countryId;
             ViewBag.CityId = cityId;
             ViewBag.Year = year;
