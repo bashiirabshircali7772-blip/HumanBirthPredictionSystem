@@ -39,7 +39,6 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
                     Birth Records
                 </a>
-
                 <div class="nav-label">Analysis</div>
                 <a href="/GenderDistribution" class="@(IsActive("GenderDistribution") ? "active" : "")">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18"/></svg>
@@ -57,14 +56,23 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
                     Reports
                 </a>
+
+                @if (User.IsInRole("Administrator"))
+                {
+                    <div class="nav-label">Administration</div>
+                    <a href="/Users" class="@(IsActive("Users") ? "active" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        User Management
+                    </a>
+                }
             </nav>
 
             <div class="sidebar-footer">
                 <div class="user-row">
-                    <div class="avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "A")</div>
+                    <div class="avatar">@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "U")</div>
                     <div>
-                        <div style="color:#fff;font-weight:600;">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</div>
-                        <div>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Administrator")</div>
+                        <div style="color:#fff;font-weight:600;">@(User.FindFirst("Username")?.Value ?? User.Identity?.Name)</div>
+                        <div style="font-size:12px;color:#8b93ab;">@(User.IsInRole("Administrator") ? "Administrator" : "Standard User")</div>
                     </div>
                 </div>
                 <form asp-controller="Account" asp-action="Logout" method="get">
@@ -88,8 +96,8 @@
                     </div>
                 </div>
                 <div class="topbar-meta">
-                    <span class="topbar-date">Thursday, 10 September 2026</span>
-                    <span class="topbar-profile">@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</span>
+                    <span class="topbar-date">@DateTime.Now.ToString("dddd, d MMMM yyyy")</span>
+                    <span class="topbar-profile">@(User.FindFirst("Username")?.Value ?? User.Identity?.Name)</span>
                 </div>
             </div>
 

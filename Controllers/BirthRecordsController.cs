@@ -80,6 +80,7 @@ namespace HumanBirthPredictionSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Edit(int id)
         {
             var record = await _db.BirthRecords.FindAsync(id);
@@ -90,6 +91,7 @@ namespace HumanBirthPredictionSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, BirthRecord model)
         {
@@ -131,6 +133,7 @@ namespace HumanBirthPredictionSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {

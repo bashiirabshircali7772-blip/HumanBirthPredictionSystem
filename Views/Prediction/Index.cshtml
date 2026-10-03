@@ -93,7 +93,10 @@ else
 @if (Model.HasResults)
 {
     <script>
-        const rows = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CombinedRows));
+        const rows = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CombinedRows, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        }));
         const years = rows.map(r => r.year);
         const totals = rows.map(r => r.totalBirths);
         const isPredicted = rows.map(r => r.dataType === 'Predicted');

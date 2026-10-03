@@ -24,7 +24,8 @@ namespace HumanBirthPredictionSystem.Data
                     Username = "Bashiir",
                     PasswordHash = PasswordHasher.Hash("bashiir21"),
                     FullName = "Bashiir Abshir Ali",
-                    Role = "Administrator"
+                    Role = "Administrator",
+                    CreatedAt = new DateTime(2026, 9, 23, 10, 0, 0, DateTimeKind.Utc)
                 };
                 db.Users.Add(admin);
             }
@@ -34,6 +35,27 @@ namespace HumanBirthPredictionSystem.Data
                 admin.PasswordHash = PasswordHasher.Hash("bashiir21");
                 admin.FullName = "Bashiir Abshir Ali";
                 admin.Role = "Administrator";
+            }
+
+            // ---- Standard Data Entry user account (Ahmed) ----------------
+            var ahmed = db.Users.SingleOrDefault(u => u.Username == "Ahmed");
+            if (ahmed == null)
+            {
+                ahmed = new User
+                {
+                    Username = "Ahmed",
+                    PasswordHash = PasswordHasher.Hash("user123"),
+                    FullName = "Ahmed Mohamed (Data Entry)",
+                    Role = "User",
+                    CreatedAt = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc)
+                };
+                db.Users.Add(ahmed);
+            }
+            else
+            {
+                ahmed.PasswordHash = PasswordHasher.Hash("user123");
+                ahmed.FullName = "Ahmed Mohamed (Data Entry)";
+                ahmed.Role = "User";
             }
 
             db.SaveChanges();

@@ -95,25 +95,40 @@ namespace HumanBirthPredictionSystem.Controllers
             if (input.CityId.HasValue) historyQuery = historyQuery.Where(r => r.CityId == input.CityId);
             var history = await historyQuery.OrderBy(r => r.Year).ToListAsync();
 
-            var rows = new List<PredictionRow>();
-            rows.AddRange(history.Select(h => new PredictionRow
-            {
-                Year = h.Year,
-                DataType = h.RecordType.ToString(),
-                TotalBirths = h.TotalBirths,
-                MaleBirths = h.MaleBirths,
-                FemaleBirths = h.FemaleBirths
-            }));
-            rows.AddRange(newPredictions.Select(p => new PredictionRow
-            {
-                Year = p.Year,
-                DataType = "Predicted",
-                TotalBirths = p.PredictedTotalBirths,
-                MaleBirths = p.PredictedMaleBirths,
-                FemaleBirths = p.PredictedFemaleBirths
-            }));
+            var historicalRows = history
+                .GroupBy(h => h.Year)
+                .Select(g => new PredictionRow
+                {
+                    Year = g.Key,
+                    DataType = g.First().RecordType.ToString(),
+                    TotalBirths = g.Sum(h => (long)h.TotalBirths),
+                    MaleBirths = g.Sum(h => (long)h.MaleBirths),
+                    FemaleBirths = g.Sum(h => (long)h.FemaleBirths)
+                });
 
-            input.CombinedRows = rows.OrderBy(r => r.Year).ToList();
+            var predictedRows = newPredictions
+                .GroupBy(p => p.Year)
+                .Select(g =>
+                {
+                    var p = g.Last();
+                    return new PredictionRow
+                    {
+                        Year = p.Year,
+                        DataType = "Predicted",
+                        TotalBirths = p.PredictedTotalBirths,
+                        MaleBirths = p.PredictedMaleBirths,
+                        FemaleBirths = p.PredictedFemaleBirths
+                    };
+                });
+
+            // Keep one row per year; a prediction replaces historical data for
+            // that year so the table and chart use the same series.
+            input.CombinedRows = historicalRows
+                .Concat(predictedRows)
+                .GroupBy(r => r.Year)
+                .Select(g => g.Last())
+                .OrderBy(r => r.Year)
+                .ToList();
             input.HasResults = true;
 
             TempData["Success"] = $"Prediction generated successfully using {result.Model}.";

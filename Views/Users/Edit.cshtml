@@ -1,0 +1,51 @@
+@model HumanBirthPredictionSystem.ViewModels.EditUserViewModel
+@{
+    ViewData["Title"] = "Edit User";
+    ViewData["Subtitle"] = $"Modify account details and role for {Model.Username}";
+}
+
+<div class="card" style="max-width: 680px; margin: 0; border-radius: 14px;">
+    <div class="card-pad" style="padding: 28px 32px;">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label asp-for="Username" class="field-label" style="font-size: 13px; font-weight: 700; color: var(--navy-950); margin-bottom: 8px;">Username</label>
+                <input asp-for="Username" class="form-control" style="padding: 10px 14px;" />
+                <span asp-validation-for="Username" class="field-error"></span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label asp-for="FullName" class="field-label" style="font-size: 13px; font-weight: 700; color: var(--navy-950); margin-bottom: 8px;">Full Name</label>
+                <input asp-for="FullName" class="form-control" style="padding: 10px 14px;" />
+                <span asp-validation-for="FullName" class="field-error"></span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label asp-for="Role" class="field-label" style="font-size: 13px; font-weight: 700; color: var(--navy-950); margin-bottom: 8px;">System Role</label>
+                <select asp-for="Role" class="form-control" style="padding: 10px 14px;">
+                    <option value="User">User (Data Entry &amp; View Only - Cannot Edit/Delete)</option>
+                    <option value="Administrator">Administrator (Full Control)</option>
+                </select>
+                <span asp-validation-for="Role" class="field-error"></span>
+            </div>
+
+            <div style="border-top: 1px dashed #d5d9e5; margin: 24px 0;"></div>
+
+            <div class="form-group" style="margin-bottom: 28px;">
+                <label asp-for="NewPassword" class="field-label" style="font-size: 13px; font-weight: 700; color: var(--navy-950); margin-bottom: 8px;">New Password (leave blank to keep current)</label>
+                <input asp-for="NewPassword" type="password" class="form-control" placeholder="Leave empty to keep existing password" style="padding: 10px 14px;" />
+                <div style="font-size: 12.5px; color: var(--ink-soft); margin-top: 6px;">Only fill this if you want to reset or change the user's password.</div>
+                <span asp-validation-for="NewPassword" class="field-error"></span>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 10px;">
+                <a asp-action="Index" class="btn btn-outline" style="padding: 9px 22px;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 9px 24px;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>

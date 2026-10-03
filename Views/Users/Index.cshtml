@@ -1,0 +1,109 @@
+@model List<User>
+@{
+    ViewData["Title"] = "User Management";
+    ViewData["Subtitle"] = "Manage administrative and standard user accounts and permissions";
+    var currentUsername = User.FindFirst("Username")?.Value ?? User.Identity?.Name ?? "";
+}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+    <div style="font-size:14.5px; color:var(--ink-soft);">
+        Total Users Registered: <strong style="color:var(--navy-950); font-weight:700;">@Model.Count</strong>
+    </div>
+    <a asp-action="Create" class="btn btn-primary" style="font-size:13.5px; padding:9px 18px; border-radius:var(--radius-sm); font-weight:700;">
+        + Add New User
+    </a>
+</div>
+
+<!-- Role-Based Access Control (RBAC) Informational Banner -->
+<div style="background:#f4f5fd; border:1px solid #dfe3f7; border-radius:14px; padding:18px 22px; margin-bottom:24px; display:flex; align-items:flex-start; gap:16px;">
+    <div style="width:40px; height:40px; border-radius:10px; background:#4f46e5; color:#ffffff; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 10px rgba(79,70,229,0.22);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.2l7 3.1v4.7c0 4.67-3.13 9.03-7 10.18-3.87-1.15-7-5.51-7-10.18V6.3l7-3.1z"/>
+        </svg>
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:14px; font-weight:700; color:#1e1b4b; margin-bottom:4px;">Role-Based Access Control (RBAC)</div>
+        <div style="font-size:13px; color:#475569; line-height:1.55;">
+            <div><strong>Admin:</strong> Full permissions (User Management, Countries, Cities, Edit/Delete Records).</div>
+            <div><strong>User:</strong> Data Entry &amp; Viewer role. Can log in, explore dashboards, run predictions, export reports, and submit new birth records, but <em>strictly cannot edit, delete, or alter existing system data</em>.</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="padding:12px 18px;">USERNAME</th>
+                    <th style="padding:12px 18px;">FULL NAME</th>
+                    <th style="padding:12px 18px;">ASSIGNED ROLE</th>
+                    <th style="padding:12px 18px;">PERMISSIONS</th>
+                    <th style="padding:12px 18px;">CREATED</th>
+                    <th style="padding:12px 18px; text-align:right;">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6"><div class="empty-state"><h4>No users found</h4><p>Click '+ Add New User' to create an account.</p></div></td></tr>
+            }
+            @foreach (var user in Model)
+            {
+                bool isCurrent = string.Equals(user.Username, currentUsername, StringComparison.OrdinalIgnoreCase);
+                bool isAdmin = string.Equals(user.Role, "Administrator", StringComparison.OrdinalIgnoreCase);
+
+                <tr>
+                    <td style="padding:14px 18px;">
+                        <strong>@user.Username</strong>
+                        @if (isCurrent)
+                        {
+                            <span class="badge" style="background:#e0edff; color:#2563eb; font-size:11px; padding:2px 7px; margin-left:6px; font-weight:600; vertical-align:middle;">You</span>
+                        }
+                    </td>
+                    <td style="padding:14px 18px;">@user.FullName</td>
+                    <td style="padding:14px 18px;">
+                        @if (isAdmin)
+                        {
+                            <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:4px 11px; font-weight:600;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                Administrator
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge" style="background:#ede9fe; color:#6d28d9; border:1px solid #ddd6fe; padding:4px 11px; font-weight:600;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                Standard User
+                            </span>
+                        }
+                    </td>
+                    <td style="padding:14px 18px; font-size:13px;">
+                        @if (isAdmin)
+                        {
+                            <span style="color:#16a34a; font-weight:bold; margin-right:4px;">&#10003;</span> <span>Full System &amp; Data Control</span>
+                        }
+                        else
+                        {
+                            <span style="color:#16a34a; font-weight:bold; margin-right:4px;">&#10003;</span> <span>Data Entry &amp; View Only (No Edit/Delete)</span>
+                        }
+                    </td>
+                    <td class="text-soft" style="padding:14px 18px;">@user.CreatedAt.ToString("MMM d, yyyy")</td>
+                    <td style="padding:14px 18px;">
+                        <div class="actions-row" style="justify-content:flex-end;">
+                            <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline btn-sm">Edit</a>
+                            @if (!isCurrent)
+                            {
+                                <form asp-action="Delete" asp-route-id="@user.Id" method="post" data-confirm="Are you sure you want to delete user '@user.Username'?">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
